@@ -164,23 +164,6 @@
           </div>
         </div>
       </div>
-        <!-- 폴더 탐색 패널 -->
-        <div id="folderBrowserPanel" class="folder-browser-panel">
-          <div class="folder-browser-header">
-            <h4>📁 폴더 탐색</h4>
-            <button class="btn-icon" onclick="closeFolderBrowser()" title="닫기">&times;</button>
-          </div>
-          <div class="folder-browser-current">
-            <span id="folderBrowserPath">~</span>
-          </div>
-          <div class="folder-browser-actions-top">
-            <button class="btn btn-secondary btn-sm" onclick="browseParent()">⬆️ 상위 폴더</button>
-            <button class="btn btn-primary btn-sm" onclick="selectFolder()">✅ 선택</button>
-          </div>
-          <div id="folderBrowserList" class="folder-browser-list">
-            <!-- 폴더 목록 -->
-          </div>
-        </div>
       </div>
       <!-- 환경설정 탭 (새로) -->
       <div class="settings-content settings-tab-content" id="settingsTabEnvironment">
@@ -279,6 +262,26 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260204"></script>
+  <!-- 폴더 탐색 모달 -->
+  <div id="folderBrowserModal" class="modal">
+    <div class="modal-content folder-browser-modal">
+      <div class="modal-header">
+        <h2>📁 폴더 선택</h2>
+        <button class="close-btn" onclick="closeFolderBrowser()">&times;</button>
+      </div>
+      <div class="folder-browser-current">
+        <span id="folderBrowserPath">~</span>
+      </div>
+      <div class="folder-browser-actions-top">
+        <button class="btn btn-secondary" onclick="browseParent()">⬆️ 상위 폴더</button>
+        <button class="btn btn-primary" onclick="selectFolder()">✅ 선택</button>
+      </div>
+      <div id="folderBrowserList" class="folder-browser-list">
+        <!-- 폴더 목록 -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20260204b"></script>
 </body>
 </html>

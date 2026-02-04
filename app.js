@@ -1584,16 +1584,14 @@ async function importSelectedIssues() {
 let currentBrowsePath = '';
 
 async function openFolderBrowser() {
-  const panel = document.getElementById('folderBrowserPanel');
-  panel.classList.add('active');
+  document.getElementById('folderBrowserModal').classList.add('active');
 
-  // 입력된 경로가 있으면 거기서 시작
   const inputPath = document.getElementById('newProjectPath').value.trim();
   await browseTo(inputPath || '');
 }
 
 function closeFolderBrowser() {
-  document.getElementById('folderBrowserPanel').classList.remove('active');
+  document.getElementById('folderBrowserModal').classList.remove('active');
 }
 
 async function browseTo(targetPath) {

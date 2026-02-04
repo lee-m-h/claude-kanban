@@ -1074,31 +1074,11 @@ form {
   padding: 8px 10px;
 }
 
-.folder-browser-panel {
-  display: none;
-  margin-top: 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.folder-browser-panel.active {
-  display: block;
-}
-
-.folder-browser-header {
+.folder-browser-modal {
+  width: 520px;
+  max-height: 70vh;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.folder-browser-header h4 {
-  font-size: 14px;
-  font-weight: 600;
+  flex-direction: column;
 }
 
 .folder-browser-current {
@@ -1124,7 +1104,9 @@ form {
 }
 
 .folder-browser-list {
-  max-height: 240px;
+  flex: 1;
+  min-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
