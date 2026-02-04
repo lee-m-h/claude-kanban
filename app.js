@@ -606,10 +606,12 @@ function moveToReviewReal(ticketId, ticketElement) {
   ticketElement.querySelector('.ticket-actions').innerHTML = isCheckType ? `
     <button class="btn btn-approve" onclick="completeTask('${ticketId}')">✅ 완료</button>
     <button class="btn btn-reject" onclick="rejectTask('${ticketId}')">🔄 재요청</button>
+    <button class="btn btn-delete-small" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
     <button class="btn btn-log" onclick="viewLog('${ticketId}')">📝 로그</button>
   ` : `
     <button class="btn btn-approve" onclick="approveTask('${ticketId}')">✅ 승인</button>
     <button class="btn btn-reject" onclick="rejectTask('${ticketId}')">🔄 재요청</button>
+    <button class="btn btn-delete-small" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
     <button class="btn btn-log" onclick="viewLog('${ticketId}')">📝 로그</button>
   `;
   
@@ -716,6 +718,55 @@ async function restartTask(ticketId) {
 }
 
 // 로그 보기 (사이드 패널에 표시 - 위에서 정의됨)
+
+// 📂 변경 파일 보기
+async function viewChanges(ticketId) {
+  const sidePanel = document.getElementById('logSidePanel');
+  const logOutput = document.getElementById('logSideOutput');
+  const logTitle = document.getElementById('logSideTitle');
+
+  sidePanel.classList.add('active');
+  logTitle.textContent = `📂 변경 파일 - #${ticketId}`;
+  logOutput.innerHTML = '<span class="log-info">변경 파일 확인 중...</span>';
+
+  try {
+    const response = await fetch(`${API_BASE}/tasks/${ticketId}/changes`);
+    const data = await response.json();
+
+    if (!data.hasChanges) {
+      logOutput.innerHTML = '<span class="log-info">📭 변경된 파일이 없습니다.</span>';
+      return;
+    }
+
+    // 파일 목록
+    const statusEmoji = { modified: '✏️', added: '🆕', deleted: '🗑️', untracked: '❓', renamed: '🔄' };
+    const fileList = data.files.map(f =>
+      `<span class="log-${f.status === 'deleted' ? 'error' : f.status === 'added' ? 'success' : 'claude'}">${statusEmoji[f.status] || '📄'} ${f.status.padEnd(10)} ${f.path}</span>`
+    ).join('\n');
+
+    // diff 요약
+    let diffHtml = '';
+    if (data.diff) {
+      diffHtml = '\n\n' + data.diff
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .split('\n')
+        .map(line => {
+          if (line.startsWith('+') && !line.startsWith('+++')) return `<span class="log-success">${line}</span>`;
+          if (line.startsWith('-') && !line.startsWith('---')) return `<span class="log-error">${line}</span>`;
+          if (line.startsWith('@@')) return `<span class="log-info">${line}</span>`;
+          if (line.startsWith('diff ')) return `\n<span class="log-warning"><strong>${line}</strong></span>`;
+          return line;
+        })
+        .join('\n');
+    }
+
+    logOutput.innerHTML = `<strong>📂 변경된 파일 (${data.files.length}개)</strong>\n${'─'.repeat(40)}\n${fileList}\n\n<strong>📊 요약</strong>\n${'─'.repeat(40)}\n${data.summary}${diffHtml}`;
+
+  } catch (error) {
+    console.error('변경 파일 조회 실패:', error);
+    logOutput.innerHTML = '<span class="log-error">변경 파일을 불러올 수 없습니다.</span>';
+  }
+}
 
 // 로그 포맷팅
 function formatLog(log) {
@@ -825,6 +876,13 @@ async function approveTask(ticketId) {
     
     if (!response.ok) {
       alert(`❌ 오류: ${result.error}`);
+      return;
+    }
+
+    // 변경사항 없으면 바로 완료
+    if (result.skippedCommit) {
+      moveToDone(ticketId, ticket);
+      showNotification('✅ 변경사항 없이 완료 처리됨');
       return;
     }
     
@@ -1195,11 +1253,13 @@ function createTicketHtml(ticket) {
     actionsHtml = isCheck ? `
       <button class="btn btn-approve" onclick="completeTask('${ticket.id}')">✅ 완료</button>
       <button class="btn btn-reject" onclick="rejectTask('${ticket.id}')">🔄 재요청</button>
+      <button class="btn btn-delete-small" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
       <button class="btn btn-delete-small" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
       <button class="btn btn-delete-small" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
     ` : `
       <button class="btn btn-approve" onclick="approveTask('${ticket.id}')">✅ 승인</button>
       <button class="btn btn-reject" onclick="rejectTask('${ticket.id}')">🔄 재요청</button>
+      <button class="btn btn-delete-small" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
       <button class="btn btn-delete-small" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
       <button class="btn btn-delete-small" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
     `;
