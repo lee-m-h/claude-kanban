@@ -2,4 +2,7 @@ node_modules/
 data/settings.json
 data/projects.json
 data/tickets.json
+data/logs/
 .env
+menubar-app/dist/
+menubar-app/node_modules/
