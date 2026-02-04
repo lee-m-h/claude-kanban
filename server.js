@@ -576,6 +576,50 @@ app.get('/api/tasks/running', (req, res) => {
   res.json(running);
 });
 
+// 📂 변경 파일 목록 조회
+app.get('/api/tasks/:ticketId/changes', async (req, res) => {
+  const { ticketId } = req.params;
+
+  const ticketsData = loadTickets();
+  const ticket = ticketsData.tickets.find(t => t.id === ticketId);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+  const projects = loadProjects();
+  const project = projects.projects.find(p => p.id === ticket.projectId);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  try {
+    const { execSync } = require('child_process');
+    const cwd = project.path;
+
+    // git diff --stat (스테이징 안 된 변경)
+    const unstaged = execSync('git diff --stat 2>/dev/null || true', { cwd, encoding: 'utf8' }).trim();
+    // git diff --cached --stat (스테이징된 변경)
+    const staged = execSync('git diff --cached --stat 2>/dev/null || true', { cwd, encoding: 'utf8' }).trim();
+    // 변경된 파일 목록 (상세)
+    const statusOutput = execSync('git status --short 2>/dev/null || true', { cwd, encoding: 'utf8' }).trim();
+    // 변경 내용 (diff)
+    const diff = execSync('git diff 2>/dev/null || true', { cwd, encoding: 'utf8' });
+    const diffCached = execSync('git diff --cached 2>/dev/null || true', { cwd, encoding: 'utf8' });
+
+    const files = statusOutput ? statusOutput.split('\n').map(line => {
+      const status = line.substring(0, 2).trim();
+      const filePath = line.substring(3);
+      const statusMap = { 'M': 'modified', 'A': 'added', 'D': 'deleted', '??': 'untracked', 'R': 'renamed' };
+      return { status: statusMap[status] || status, path: filePath };
+    }) : [];
+
+    res.json({
+      hasChanges: files.length > 0,
+      files,
+      summary: unstaged || staged || '변경사항 없음',
+      diff: (diff + diffCached).slice(0, 50000) // 최대 50KB
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ✅ 승인 - Claude에게 커밋/푸시 요청
 app.post('/api/tasks/:ticketId/approve', async (req, res) => {
   const { ticketId } = req.params;
@@ -594,6 +638,32 @@ app.post('/api/tasks/:ticketId/approve', async (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
   
+  // 변경사항 확인
+  try {
+    const statusOutput = execSync('git status --short 2>/dev/null || true', {
+      cwd: project.path, encoding: 'utf8'
+    }).trim();
+
+    if (!statusOutput) {
+      // 변경사항 없으면 바로 완료
+      ticket.status = 'done';
+      ticket.completedAt = new Date().toISOString();
+      saveTickets(ticketsData);
+
+      if (ticket.jiraKey) {
+        transitionJiraIssue(ticket.jiraKey, 'done').catch(() => {});
+      }
+
+      return res.json({
+        success: true,
+        message: '변경사항이 없어 바로 완료 처리되었습니다.',
+        skippedCommit: true
+      });
+    }
+  } catch (e) {
+    console.error('git status 확인 실패:', e.message);
+  }
+
   // 티켓 상태를 진행중으로
   ticket.status = 'in-progress';
   ticket.approving = true;
