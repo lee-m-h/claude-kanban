@@ -590,7 +590,7 @@ form {
 }
 
 .log-output {
-  background: var(--bg-primary);
+  background: #2d1b2e;
   padding: 16px;
   border-radius: 8px;
   font-family: 'SF Mono', Monaco, 'Courier New', monospace;
@@ -598,6 +598,10 @@ form {
   line-height: 1.8;
   overflow-x: auto;
   white-space: pre-wrap;
+}
+
+[data-theme="light"] .log-output {
+  background: #fff0f5;
 }
 
 .log-time {
