@@ -1583,6 +1583,60 @@ async function importSelectedIssues() {
 
 let currentBrowsePath = '';
 
+// ========== 세션 선택 ==========
+
+async function openSessionPicker() {
+  const projectId = document.getElementById('ticketProject').value;
+  if (!projectId) {
+    alert('프로젝트를 먼저 선택해주세요!');
+    return;
+  }
+
+  const modal = document.getElementById('sessionPickerModal');
+  const content = document.getElementById('sessionPickerContent');
+  modal.classList.add('active');
+  content.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary)">🔄 세션 불러오는 중...</div>';
+
+  try {
+    const response = await fetch(`${API_BASE}/sessions/${projectId}`);
+    const sessions = await response.json();
+
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      content.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary)">📭 이 프로젝트의 세션이 없습니다.</div>';
+      return;
+    }
+
+    content.innerHTML = sessions.map(s => {
+      const date = new Date(s.updatedAt).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const shortId = s.sessionId.slice(0, 8);
+      return `
+        <div class="session-picker-item" onclick="selectSession('${s.sessionId}')">
+          <div class="session-picker-summary">${s.summary}</div>
+          <div class="session-picker-meta">
+            <span class="session-picker-id">${shortId}...</span>
+            <span class="session-picker-date">${date}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('세션 로드 실패:', error);
+    content.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary)">❌ 세션 불러오기 실패</div>';
+  }
+}
+
+function selectSession(sessionId) {
+  document.getElementById('ticketSessionId').value = sessionId;
+  closeSessionPicker();
+}
+
+function closeSessionPicker() {
+  document.getElementById('sessionPickerModal').classList.remove('active');
+}
+
+// ========== 폴더 탐색 ==========
+
 async function openFolderBrowser() {
   document.getElementById('folderBrowserModal').classList.add('active');
 

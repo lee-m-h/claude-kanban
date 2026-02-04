@@ -329,6 +329,70 @@ app.delete('/api/projects/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// Claude Code 세션 목록 조회 (프로젝트별)
+app.get('/api/sessions/:projectId', (req, res) => {
+  const projects = loadProjects();
+  const project = projects.projects.find(p => p.id === req.params.projectId);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  // Claude Code 세션 디렉터리: ~/.claude/projects/{encoded-path}/
+  const homeDir = process.env.HOME || require('os').homedir();
+  const encodedPath = project.path.replace(/\//g, '-');
+  const sessionsDir = path.join(homeDir, '.claude', 'projects', encodedPath);
+
+  try {
+    if (!fs.existsSync(sessionsDir)) return res.json([]);
+
+    const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
+    const sessions = [];
+
+    for (const file of files) {
+      const sessionId = file.replace('.jsonl', '');
+      try {
+        // 첫 몇 줄만 읽어서 요약 추출
+        const content = fs.readFileSync(path.join(sessionsDir, file), 'utf8');
+        const lines = content.split('\n').filter(l => l.trim());
+
+        let summary = '';
+        let firstMessage = '';
+        let timestamp = '';
+
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            if (entry.type === 'summary' && entry.summary) {
+              summary = entry.summary;
+            }
+            if (entry.type === 'user' && !firstMessage && entry.message?.content) {
+              const msg = typeof entry.message.content === 'string'
+                ? entry.message.content
+                : entry.message.content[0]?.text || '';
+              firstMessage = msg.slice(0, 100);
+              timestamp = entry.timestamp || '';
+            }
+          } catch (e) {}
+        }
+
+        // 마지막 수정 시간
+        const stat = fs.statSync(path.join(sessionsDir, file));
+
+        sessions.push({
+          sessionId,
+          summary: summary || firstMessage || '(내용 없음)',
+          updatedAt: stat.mtime.toISOString(),
+          timestamp
+        });
+      } catch (e) {}
+    }
+
+    // 최신순 정렬
+    sessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    res.json(sessions.slice(0, 20)); // 최근 20개만
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 티켓 목록 조회
 app.get('/api/tickets', (req, res) => {
   const data = loadTickets();

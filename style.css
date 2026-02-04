@@ -1067,6 +1067,42 @@ form {
   background: rgba(219, 109, 40, 0.1);
 }
 
+/* 세션 선택 */
+.session-picker-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.session-picker-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.session-picker-item:last-child {
+  border-bottom: none;
+}
+
+.session-picker-summary {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-picker-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.session-picker-id {
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
 /* 폴더 탐색기 */
 .btn-browse {
   min-width: 40px;
