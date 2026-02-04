@@ -366,36 +366,6 @@ app.post('/api/tasks/start', (req, res) => {
     }
   }
   
-  // 티켓 유형별 지시사항
-  const typeInstructions = {
-    feature: `## 지시사항 (🆕 신규 기능)
-1. 새로운 기능을 구현해주세요.
-2. 필요한 파일을 생성/수정하세요.
-3. 작업 완료 후 변경사항을 요약해주세요.
-4. Git 커밋은 하지 마세요 (리뷰 후 진행).`,
-    
-    bug: `## 지시사항 (🐛 버그 수정)
-1. 먼저 버그의 원인을 분석해주세요.
-2. 원인을 파악한 후 수정해주세요.
-3. 수정 내용과 원인을 설명해주세요.
-4. Git 커밋은 하지 마세요 (리뷰 후 진행).`,
-    
-    improvement: `## 지시사항 (✏️ 개선/리팩토링)
-1. 기존 코드를 분석해주세요.
-2. 개선점을 파악하고 리팩토링해주세요.
-3. 변경 전/후를 비교 설명해주세요.
-4. Git 커밋은 하지 마세요 (리뷰 후 진행).`,
-    
-    check: `## 지시사항 (🔍 확인/분석)
-1. 요청된 내용을 확인/분석해주세요.
-2. ⚠️ 파일을 수정하지 마세요! 분석만 해주세요.
-3. 분석 결과를 상세히 설명해주세요.
-4. 필요시 개선 제안을 해주세요 (수정은 하지 말고).`
-  };
-  
-  const ticketType = ticket?.type || 'feature';
-  const instructions = typeInstructions[ticketType] || typeInstructions.feature;
-  
   const config = getConfig();
 
   // Jira 정보 (있는 경우)
@@ -404,20 +374,40 @@ app.post('/api/tasks/start', (req, res) => {
     jiraInfo = `
 ## Jira 티켓
 - 키: ${ticket.jiraKey}
-- URL: https://${config.jiraHost}/browse/${ticket.jiraKey}
-`;
+- URL: https://${config.jiraHost}/browse/${ticket.jiraKey}`;
   }
+
+  // 성공 기준 (있으면 포함)
+  const successCriteria = ticket?.successCriteria
+    ? `\n## 성공 기준\n${ticket.successCriteria}`
+    : '';
+
+  // 확인 타입은 파일 수정 금지 추가
+  const typeNote = ticket?.type === 'check'
+    ? '\n⚠️ 이 작업은 분석/확인만 수행합니다. 파일을 수정하지 마세요.'
+    : '';
   
-  // Claude CLI 프롬프트 구성
+  // Claude CLI 프롬프트 구성 (Karpathy 원칙 적용)
   const prompt = `
 프로젝트: ${project.name}
 경로: ${project.path}
 ${jiraInfo}
-## 작업 요청
+## 작업
 제목: ${title}
 설명: ${description}
+${successCriteria}${typeNote}
 
-${instructions}
+## 원칙
+- 요청된 범위만 변경하세요. 인접 코드, 주석, 포맷팅을 "개선"하지 마세요.
+- 가장 단순한 방법으로 구현하세요. 요청받지 않은 추상화, 유연성, 설정 가능성을 추가하지 마세요.
+- 불확실하면 추측하지 말고, 가정을 명시하고 로그에 남기세요.
+- 기존 코드 스타일과 패턴을 따르세요.
+- Git 커밋하지 마세요 (리뷰 후 진행).
+
+## 검증
+- 변경한 모든 줄이 작업 요청과 직접 연결되는지 확인하세요.
+- 기존 기능이 깨지지 않았는지 확인하세요.
+- 작업 완료 후 변경사항을 간결하게 요약하세요.
 `.trim();
 
   // 로그 파일 생성

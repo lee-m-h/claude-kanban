@@ -398,6 +398,7 @@ document.getElementById('newTicketForm').addEventListener('submit', async (e) =>
   const projectId = document.getElementById('ticketProject').value;
   const title = document.getElementById('ticketTitle').value;
   const desc = document.getElementById('ticketDesc').value;
+  const successCriteria = document.getElementById('ticketSuccessCriteria').value;
   const type = document.querySelector('.type-btn.active').dataset.type;
   const jiraKey = document.getElementById('ticketJiraKey').value;
   const sessionId = document.getElementById('ticketSessionId').value.trim();
@@ -421,6 +422,7 @@ document.getElementById('newTicketForm').addEventListener('submit', async (e) =>
         type,
         title,
         description: desc,
+        successCriteria: successCriteria || null,
         priority: 'medium',
         jiraKey: jiraKey || null,
         sessionId: sessionId || null
