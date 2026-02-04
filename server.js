@@ -378,7 +378,8 @@ app.get('/api/sessions/:projectId', (req, res) => {
 
         sessions.push({
           sessionId,
-          summary: summary || firstMessage || '(내용 없음)',
+          firstMessage: firstMessage || '(내용 없음)',
+          summary: summary || '',
           updatedAt: stat.mtime.toISOString(),
           timestamp
         });

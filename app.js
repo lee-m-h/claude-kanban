@@ -1606,19 +1606,22 @@ async function openSessionPicker() {
       return;
     }
 
-    content.innerHTML = sessions.map(s => {
-      const date = new Date(s.updatedAt).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      const shortId = s.sessionId.slice(0, 8);
-      return `
-        <div class="session-picker-item" onclick="selectSession('${s.sessionId}')">
-          <div class="session-picker-summary">${s.summary}</div>
-          <div class="session-picker-meta">
-            <span class="session-picker-id">${shortId}...</span>
-            <span class="session-picker-date">${date}</span>
+    const projectName = projects[projectId]?.name || projectId;
+    content.innerHTML = `<div class="session-picker-project">📦 ${projectName}</div>` +
+      sessions.map(s => {
+        const date = new Date(s.updatedAt).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const shortId = s.sessionId.slice(0, 8);
+        return `
+          <div class="session-picker-item" onclick="selectSession('${s.sessionId}')">
+            <div class="session-picker-title">${s.firstMessage || '(내용 없음)'}</div>
+            ${s.summary ? `<div class="session-picker-summary">${s.summary}</div>` : ''}
+            <div class="session-picker-meta">
+              <span class="session-picker-id">${shortId}...</span>
+              <span class="session-picker-date">${date}</span>
+            </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
 
   } catch (error) {
     console.error('세션 로드 실패:', error);
