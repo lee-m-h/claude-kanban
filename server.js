@@ -357,6 +357,13 @@ app.post('/api/tasks/start', (req, res) => {
     ticket.status = 'in-progress';
     ticket.startedAt = new Date().toISOString();
     saveTickets(ticketsData);
+
+    // Jira 이슈가 연결되어 있으면 '진행 중'으로 전환
+    if (ticket.jiraKey) {
+      transitionJiraIssue(ticket.jiraKey, 'in-progress')
+        .then(r => r && console.log(`[Jira] ${ticket.jiraKey} → 진행 중`))
+        .catch(e => console.error(`[Jira] 전환 실패:`, e.message));
+    }
   }
   
   // 티켓 유형별 지시사항
@@ -670,6 +677,13 @@ app.post('/api/tasks/:ticketId/approve', async (req, res) => {
       t.completedAt = new Date().toISOString();
       t.approving = false;
       saveTickets(data);
+
+      // Jira 이슈가 연결되어 있으면 '완료'로 전환
+      if (t.jiraKey) {
+        transitionJiraIssue(t.jiraKey, 'done')
+          .then(r => r && console.log(`[Jira] ${t.jiraKey} → 완료`))
+          .catch(e => console.error(`[Jira] 전환 실패:`, e.message));
+      }
     }
     
     runningTasks.delete(ticketId);
@@ -857,6 +871,50 @@ async function jiraFetch(endpoint, options = {}) {
     }
   });
   return response.json();
+}
+
+// Jira 이슈 상태 전환 헬퍼
+// targetStatus: 전환하려는 상태 이름 (예: '진행 중', 'In Progress', '완료', 'Done')
+async function transitionJiraIssue(jiraKey, targetStatus) {
+  const config = getConfig();
+  if (!config.jiraHost || !jiraKey) return null;
+
+  try {
+    // 1) 사용 가능한 전환 목록 조회
+    const transitions = await jiraFetch(`/rest/api/3/issue/${jiraKey}/transitions`);
+    if (!transitions.transitions) return null;
+
+    // 2) 대상 상태와 매칭되는 전환 찾기
+    const statusAliases = {
+      'in-progress': ['진행 중', 'in progress', '진행중', 'start progress'],
+      'review': ['리뷰', 'review', 'in review', '검토', '리뷰 대기'],
+      'done': ['완료', 'done', 'closed', 'resolved', '해결됨', '종료'],
+    };
+
+    const aliases = statusAliases[targetStatus] || [targetStatus];
+    const transition = transitions.transitions.find(t =>
+      aliases.some(a => t.name.toLowerCase().includes(a.toLowerCase()) ||
+                        t.to?.name?.toLowerCase().includes(a.toLowerCase()))
+    );
+
+    if (!transition) {
+      console.log(`[Jira] ${jiraKey}: '${targetStatus}' 전환을 찾을 수 없음. 가능한 전환:`,
+        transitions.transitions.map(t => `${t.name} → ${t.to?.name}`));
+      return null;
+    }
+
+    // 3) 전환 실행
+    const result = await jiraFetch(`/rest/api/3/issue/${jiraKey}/transitions`, {
+      method: 'POST',
+      body: JSON.stringify({ transition: { id: transition.id } })
+    });
+
+    console.log(`[Jira] ${jiraKey}: '${transition.name}' → '${transition.to?.name}' 전환 완료`);
+    return { transitionName: transition.name, toStatus: transition.to?.name };
+  } catch (err) {
+    console.error(`[Jira] ${jiraKey} 상태 전환 실패:`, err.message);
+    return null;
+  }
 }
 
 // 내 미완료 이슈 목록
