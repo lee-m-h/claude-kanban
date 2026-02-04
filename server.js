@@ -165,6 +165,12 @@ function loadProjects() {
 
 // 티켓 데이터 로드
 function loadTickets() {
+  if (!fs.existsSync(TICKETS_FILE)) {
+    const defaultData = { tickets: [], nextId: 1 };
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(TICKETS_FILE, JSON.stringify(defaultData, null, 2));
+    return defaultData;
+  }
   return JSON.parse(fs.readFileSync(TICKETS_FILE, 'utf8'));
 }
 
