@@ -511,13 +511,6 @@ ${instructions}
       t.completedAt = new Date().toISOString();
       t.claudeOutput = output.slice(-2000); // 마지막 2000자만 저장
       saveTickets(data);
-
-      // Jira 이슈가 연결되어 있으면 '리뷰' 상태로 전환
-      if (t.jiraKey) {
-        transitionJiraIssue(t.jiraKey, 'review')
-          .then(r => r && console.log(`[Jira] ${t.jiraKey} → 리뷰`))
-          .catch(e => console.error(`[Jira] 전환 실패:`, e.message));
-      }
     }
     
     runningTasks.delete(ticketId);
