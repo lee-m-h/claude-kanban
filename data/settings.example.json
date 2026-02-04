@@ -1,0 +1,14 @@
+{
+  "claudeCli": {
+    "nvmBin": "",
+    "flags": ["--dangerously-skip-permissions", "--print"]
+  },
+  "jira": {
+    "host": "",
+    "email": "",
+    "apiToken": ""
+  },
+  "server": {
+    "port": 4001
+  }
+}

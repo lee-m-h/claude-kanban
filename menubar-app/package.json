@@ -1,0 +1,31 @@
+{
+  "name": "claude-kanban",
+  "version": "1.0.0",
+  "description": "Claude Kanban 메뉴바 앱",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac --dir",
+    "dist": "electron-builder --mac"
+  },
+  "author": "명하",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.kanban.claude",
+    "productName": "Claude Kanban",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": ["dir"],
+      "icon": null
+    },
+    "files": [
+      "main.js",
+      "icon.png"
+    ],
+    "extraResources": []
+  }
+}

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <title>Claude Kanban - AI 프로젝트 매니저</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- 헤더 -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🦊</span>
+        <span class="logo-text">Claude Kanban</span>
+      </div>
+      <div class="project-selector">
+        <select id="projectSelect" onchange="filterByProject()">
+          <option value="all">📦 전체 프로젝트</option>
+          <!-- 동적 로드 -->
+        </select>
+        <button class="btn btn-secondary" onclick="openSettings()">⚙️</button>
+        <button class="btn btn-secondary" id="themeToggleBtn" onclick="cycleTheme()" title="테마 변경">🖥️</button>
+      </div>
+      <button class="btn btn-secondary" onclick="openJiraModal()">📥 Jira</button>
+      <button class="btn btn-primary" onclick="openNewTicket()">+ 새 티켓</button>
+    </header>
+
+    <!-- 칸반 보드 -->
+    <main class="kanban-board">
+      <!-- 백로그 -->
+      <div class="column" data-status="backlog">
+        <div class="column-header">
+          <h2>📋 백로그</h2>
+          <span class="count">0</span>
+        </div>
+        <div class="tickets"></div>
+      </div>
+
+      <!-- 진행중 -->
+      <div class="column" data-status="in-progress">
+        <div class="column-header">
+          <h2>🔄 진행중</h2>
+          <span class="count">0</span>
+        </div>
+        <div class="tickets"></div>
+      </div>
+
+      <!-- 리뷰대기 -->
+      <div class="column" data-status="review">
+        <div class="column-header">
+          <h2>👀 리뷰대기</h2>
+          <span class="count">0</span>
+        </div>
+        <div class="tickets"></div>
+      </div>
+
+      <!-- 완료 -->
+      <div class="column" data-status="done">
+        <div class="column-header">
+          <h2>✅ 완료</h2>
+          <span class="count">0</span>
+        </div>
+        <div class="tickets"></div>
+      </div>
+
+      <!-- 로그 사이드 패널 -->
+      <div id="logSidePanel" class="log-side-panel">
+        <div class="log-side-header">
+          <h3 id="logSideTitle">📝 작업 로그</h3>
+          <div class="log-side-actions">
+            <button class="btn-icon" onclick="expandLogToModal()" title="펼쳐보기">⛶</button>
+            <button class="btn-icon" onclick="closeLogSidePanel()" title="닫기">&times;</button>
+          </div>
+        </div>
+        <div class="log-side-content">
+          <pre id="logSideOutput" class="log-output"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 새 티켓 모달 -->
+  <div id="newTicketModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>새 티켓 생성</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="newTicketForm">
+        <div class="form-group">
+          <label for="ticketProject">프로젝트</label>
+          <select id="ticketProject" required>
+            <option value="">프로젝트 선택...</option>
+            <!-- 동적 로드 -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>티켓 유형</label>
+          <div class="type-buttons">
+            <button type="button" class="type-btn active" data-type="feature">🆕 신규</button>
+            <button type="button" class="type-btn" data-type="bug">🐛 버그</button>
+            <button type="button" class="type-btn" data-type="improvement">✏️ 개선</button>
+            <button type="button" class="type-btn" data-type="check">🔍 확인</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="ticketTitle">제목</label>
+          <input type="text" id="ticketTitle" placeholder="티켓 제목을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label for="ticketDesc">설명</label>
+          <textarea id="ticketDesc" rows="4" placeholder="상세 설명을 입력하세요. Claude가 이 내용을 바탕으로 작업합니다."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Jira 이슈 연결 (선택)</label>
+          <div class="jira-link-input">
+            <input type="text" id="ticketJiraKey" placeholder="예: JSMR-123" readonly>
+            <button type="button" class="btn btn-secondary" onclick="openJiraLinkModal()">🔗 Jira 연결</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="ticketSessionId">기존 세션 이어가기 (선택)</label>
+          <input type="text" id="ticketSessionId" placeholder="세션 ID를 입력하면 기존 대화를 이어갑니다">
+          <small style="color: #666; font-size: 12px;">💡 비워두면 새 세션이 생성됩니다</small>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+          <button type="submit" class="btn btn-primary">생성</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>⚙️ 설정</h2>
+        <button class="close-btn" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="projects" onclick="switchSettingsTab('projects')">📦 프로젝트</button>
+        <button class="settings-tab" data-tab="environment" onclick="switchSettingsTab('environment')">🔧 환경설정</button>
+      </div>
+      <!-- 프로젝트 탭 (기존) -->
+      <div class="settings-content settings-tab-content active" id="settingsTabProjects">
+        <div class="form-group">
+          <label>프로젝트 목록</label>
+          <div id="projectList" class="project-list"></div>
+        </div>
+        <div class="form-group">
+          <label>새 프로젝트 추가</label>
+          <div class="add-project-form">
+            <input type="text" id="newProjectId" placeholder="프로젝트 ID (예: my-app)">
+            <input type="text" id="newProjectPath" placeholder="경로 (예: /Users/myoungha/projects/my-app)">
+            <button class="btn btn-primary" onclick="addProject()">+ 추가</button>
+          </div>
+        </div>
+      </div>
+      <!-- 환경설정 탭 (새로) -->
+      <div class="settings-content settings-tab-content" id="settingsTabEnvironment">
+        <div class="settings-section">
+          <h3>🤖 Claude CLI</h3>
+          <div class="form-group">
+            <label for="settingsNvmBin">NVM bin 경로</label>
+            <div class="input-with-btn">
+              <input type="text" id="settingsNvmBin" placeholder="/Users/myoungha/.nvm/versions/node/v22.15.0/bin">
+              <button class="btn btn-secondary" onclick="detectClaudeCliPath()" title="자동 감지">🔍 감지</button>
+            </div>
+            <div id="detectResult" class="detect-result"></div>
+          </div>
+          <div class="form-group">
+            <label for="settingsCliFlags">CLI 플래그</label>
+            <input type="text" id="settingsCliFlags" placeholder="--dangerously-skip-permissions --print" readonly>
+            <small class="form-hint">자동 설정됨 (변경 불가)</small>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>📋 Jira 연동</h3>
+          <div class="form-group">
+            <label for="settingsJiraHost">Jira Host</label>
+            <input type="text" id="settingsJiraHost" placeholder="fnf.atlassian.net">
+          </div>
+          <div class="form-group">
+            <label for="settingsJiraEmail">이메일</label>
+            <input type="email" id="settingsJiraEmail" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label for="settingsJiraToken">API Token</label>
+            <input type="password" id="settingsJiraToken" placeholder="Jira API 토큰">
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>🖥️ 서버</h3>
+          <div class="form-group">
+            <label for="settingsPort">포트 번호</label>
+            <input type="number" id="settingsPort" placeholder="4001" min="1000" max="65535">
+            <small class="form-hint">변경 시 서버 재시작 필요</small>
+          </div>
+        </div>
+        <div class="form-actions" style="justify-content: space-between;">
+          <button class="btn btn-delete" onclick="resetAllData()">🗑️ 데이터 초기화</button>
+          <button class="btn btn-primary" onclick="saveEnvironmentSettings()">💾 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 로그 모달 -->
+  <div id="logModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>📝 작업 로그 - #004 결제 시스템 연동</h2>
+        <button class="close-btn" onclick="closeLogModal()">&times;</button>
+      </div>
+      <div class="log-content">
+        <pre class="log-output">
+<span class="log-time">[09:45:32]</span> <span class="log-info">🚀 작업 시작: 결제 시스템 연동</span>
+<span class="log-time">[09:45:33]</span> <span class="log-claude">🤖 Claude: 토스페이먼츠 API 문서 분석 중...</span>
+<span class="log-time">[09:46:15]</span> <span class="log-claude">🤖 Claude: src/lib/payment.ts 파일 생성</span>
+<span class="log-time">[09:47:02]</span> <span class="log-claude">🤖 Claude: PaymentService 클래스 구현 중...</span>
+<span class="log-time">[09:48:30]</span> <span class="log-success">✅ src/lib/payment.ts 저장 완료</span>
+<span class="log-time">[09:48:45]</span> <span class="log-claude">🤖 Claude: 결제 API 라우트 생성 중...</span>
+<span class="log-time">[09:49:20]</span> <span class="log-success">✅ src/api/payment/route.ts 저장 완료</span>
+<span class="log-time">[09:50:01]</span> <span class="log-claude">🤖 Claude: 프론트엔드 결제 컴포넌트 구현 중...</span>
+<span class="log-time">[09:51:45]</span> <span class="log-warning">⚠️ 환경변수 TOSS_SECRET_KEY 필요</span>
+<span class="log-time">[09:52:10]</span> <span class="log-claude">🤖 Claude: 테스트 코드 작성 중...</span>
+<span class="log-time">[09:53:00]</span> <span class="log-info">⏳ 진행률: 65%</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jira 이슈 모달 -->
+  <div id="jiraModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>📥 Jira 이슈 가져오기</h2>
+        <button class="close-btn" onclick="closeJiraModal()">&times;</button>
+      </div>
+      <div class="jira-content">
+        <div class="jira-toolbar">
+          <span id="jiraStatus">연결 확인 중...</span>
+          <button class="btn btn-secondary" onclick="refreshJiraIssues()">🔄 새로고침</button>
+        </div>
+        <div id="jiraIssueList" class="jira-issue-list">
+          <!-- 이슈 목록 동적 로드 -->
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeJiraModal()">취소</button>
+          <button type="button" class="btn btn-primary" onclick="importSelectedIssues()">📥 선택 항목 가져오기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
