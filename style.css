@@ -1033,6 +1033,12 @@ form {
   border-color: var(--text-secondary);
 }
 
+.btn-icon-only.btn-approve,
+.btn-icon-only.btn-reject {
+  flex: none;
+  background: transparent;
+}
+
 .btn-icon-only.btn-approve:hover {
   border-color: var(--accent-green);
   background: rgba(63, 185, 80, 0.1);
