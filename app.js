@@ -604,15 +604,15 @@ function moveToReviewReal(ticketId, ticketElement) {
   // 버튼 변경 (확인 타입은 완료/재요청)
   const isCheckType = ticketElement.dataset.type === 'check';
   ticketElement.querySelector('.ticket-actions').innerHTML = isCheckType ? `
-    <button class="btn btn-approve" onclick="completeTask('${ticketId}')">✅ 완료</button>
-    <button class="btn btn-reject" onclick="rejectTask('${ticketId}')">🔄 재요청</button>
-    <button class="btn btn-delete-small" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
-    <button class="btn btn-log" onclick="viewLog('${ticketId}')">📝 로그</button>
+    <button class="btn btn-approve btn-icon-only" onclick="completeTask('${ticketId}')" title="완료">✅</button>
+    <button class="btn btn-reject btn-icon-only" onclick="rejectTask('${ticketId}')" title="재요청">🔄</button>
+    <button class="btn btn-icon-only" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
+    <button class="btn btn-icon-only" onclick="viewLog('${ticketId}')" title="로그">📝</button>
   ` : `
-    <button class="btn btn-approve" onclick="approveTask('${ticketId}')">✅ 승인</button>
-    <button class="btn btn-reject" onclick="rejectTask('${ticketId}')">🔄 재요청</button>
-    <button class="btn btn-delete-small" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
-    <button class="btn btn-log" onclick="viewLog('${ticketId}')">📝 로그</button>
+    <button class="btn btn-approve btn-icon-only" onclick="approveTask('${ticketId}')" title="승인">✅</button>
+    <button class="btn btn-reject btn-icon-only" onclick="rejectTask('${ticketId}')" title="재요청">🔄</button>
+    <button class="btn btn-icon-only" onclick="viewChanges('${ticketId}')" title="변경파일">📂</button>
+    <button class="btn btn-icon-only" onclick="viewLog('${ticketId}')" title="로그">📝</button>
   `;
   
   reviewColumn.appendChild(ticketElement);
@@ -1251,17 +1251,17 @@ function createTicketHtml(ticket) {
     extraClass = 'review';
     const isCheck = ticket.type === 'check';
     actionsHtml = isCheck ? `
-      <button class="btn btn-approve" onclick="completeTask('${ticket.id}')">✅ 완료</button>
-      <button class="btn btn-reject" onclick="rejectTask('${ticket.id}')">🔄 재요청</button>
-      <button class="btn btn-delete-small" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
-      <button class="btn btn-delete-small" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
-      <button class="btn btn-delete-small" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
+      <button class="btn btn-approve btn-icon-only" onclick="completeTask('${ticket.id}')" title="완료">✅</button>
+      <button class="btn btn-reject btn-icon-only" onclick="rejectTask('${ticket.id}')" title="재요청">🔄</button>
+      <button class="btn btn-icon-only" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
+      <button class="btn btn-icon-only" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
+      <button class="btn btn-icon-only" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
     ` : `
-      <button class="btn btn-approve" onclick="approveTask('${ticket.id}')">✅ 승인</button>
-      <button class="btn btn-reject" onclick="rejectTask('${ticket.id}')">🔄 재요청</button>
-      <button class="btn btn-delete-small" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
-      <button class="btn btn-delete-small" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
-      <button class="btn btn-delete-small" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
+      <button class="btn btn-approve btn-icon-only" onclick="approveTask('${ticket.id}')" title="승인">✅</button>
+      <button class="btn btn-reject btn-icon-only" onclick="rejectTask('${ticket.id}')" title="재요청">🔄</button>
+      <button class="btn btn-icon-only" onclick="viewChanges('${ticket.id}')" title="변경파일">📂</button>
+      <button class="btn btn-icon-only" onclick="viewLog('${ticket.id}')" title="로그">📝</button>
+      <button class="btn btn-icon-only" onclick="deleteTicket('${ticket.id}')" title="삭제">🗑️</button>
     `;
   } else if (ticket.status === 'done') {
     extraClass = 'done';

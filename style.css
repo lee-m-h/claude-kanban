@@ -1015,3 +1015,30 @@ form {
   color: var(--accent-red);
   opacity: 1;
 }
+
+.btn-icon-only {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-width: 32px;
+  line-height: 1;
+}
+
+.btn-icon-only:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-secondary);
+}
+
+.btn-icon-only.btn-approve:hover {
+  border-color: var(--accent-green);
+  background: rgba(63, 185, 80, 0.1);
+}
+
+.btn-icon-only.btn-reject:hover {
+  border-color: var(--accent-orange);
+  background: rgba(219, 109, 40, 0.1);
+}
