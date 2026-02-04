@@ -93,15 +93,17 @@ function expandLogToModal() {
   }
 }
 
-// 모달에서 로그 보기 (기존 방식)
+// 모달에서 로그 보기 (전체화면)
 async function viewLogInModal(ticketId) {
   try {
     const response = await fetch(`${API_BASE}/tasks/${ticketId}/log`);
     const data = await response.json();
     
-    const logOutput = document.querySelector('.log-output:not(#logSideOutput)');
+    const modalContent = document.querySelector('#logModal .modal-content');
+    const logOutput = document.querySelector('#logModal .log-output');
     const modalHeader = document.querySelector('#logModal .modal-header h2');
     
+    modalContent.classList.add('modal-fullscreen');
     modalHeader.textContent = `📝 작업 로그 - #${ticketId}`;
     logOutput.innerHTML = formatLog(data.log);
     

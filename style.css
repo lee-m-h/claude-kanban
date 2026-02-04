@@ -475,6 +475,24 @@ body {
   width: 720px;
 }
 
+.modal-fullscreen {
+  width: 95vw;
+  height: 90vh;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-fullscreen .log-content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.modal-fullscreen .log-output {
+  height: 100%;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
