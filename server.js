@@ -511,6 +511,13 @@ ${instructions}
       t.completedAt = new Date().toISOString();
       t.claudeOutput = output.slice(-2000); // 마지막 2000자만 저장
       saveTickets(data);
+
+      // Jira 이슈가 연결되어 있으면 '리뷰' 상태로 전환
+      if (t.jiraKey) {
+        transitionJiraIssue(t.jiraKey, 'review')
+          .then(r => r && console.log(`[Jira] ${t.jiraKey} → 리뷰`))
+          .catch(e => console.error(`[Jira] 전환 실패:`, e.message));
+      }
     }
     
     runningTasks.delete(ticketId);
@@ -870,7 +877,16 @@ async function jiraFetch(endpoint, options = {}) {
       ...options.headers
     }
   });
-  return response.json();
+  // 204 No Content 등 빈 응답 처리
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return { success: true, status: response.status };
+  }
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return { success: response.ok, status: response.status, body: text };
+  }
 }
 
 // Jira 이슈 상태 전환 헬퍼
