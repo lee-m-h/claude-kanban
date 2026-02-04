@@ -1066,3 +1066,102 @@ form {
   border-color: var(--accent-orange);
   background: rgba(219, 109, 40, 0.1);
 }
+
+/* 폴더 탐색기 */
+.btn-browse {
+  min-width: 40px;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+.folder-browser-panel {
+  display: none;
+  margin-top: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.folder-browser-panel.active {
+  display: block;
+}
+
+.folder-browser-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.folder-browser-header h4 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.folder-browser-current {
+  padding: 8px 14px;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--accent-blue);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  word-break: break-all;
+}
+
+.folder-browser-actions-top {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.folder-browser-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.folder-browser-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.folder-browser-item:last-child {
+  border-bottom: none;
+}
+
+.folder-browser-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.folder-browser-item .folder-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.folder-browser-item .folder-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-browser-loading,
+.folder-browser-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}

@@ -159,7 +159,26 @@
           <div class="add-project-form">
             <input type="text" id="newProjectId" placeholder="프로젝트 ID (예: my-app)">
             <input type="text" id="newProjectPath" placeholder="경로 (예: /home/user/projects/my-app)">
+            <button class="btn btn-secondary btn-browse" onclick="openFolderBrowser()" title="폴더 탐색">📁</button>
             <button class="btn btn-primary" onclick="addProject()">+ 추가</button>
+          </div>
+        </div>
+      </div>
+        <!-- 폴더 탐색 패널 -->
+        <div id="folderBrowserPanel" class="folder-browser-panel">
+          <div class="folder-browser-header">
+            <h4>📁 폴더 탐색</h4>
+            <button class="btn-icon" onclick="closeFolderBrowser()" title="닫기">&times;</button>
+          </div>
+          <div class="folder-browser-current">
+            <span id="folderBrowserPath">~</span>
+          </div>
+          <div class="folder-browser-actions-top">
+            <button class="btn btn-secondary btn-sm" onclick="browseParent()">⬆️ 상위 폴더</button>
+            <button class="btn btn-primary btn-sm" onclick="selectFolder()">✅ 선택</button>
+          </div>
+          <div id="folderBrowserList" class="folder-browser-list">
+            <!-- 폴더 목록 -->
           </div>
         </div>
       </div>

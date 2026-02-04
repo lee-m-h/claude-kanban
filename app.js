@@ -1579,6 +1579,76 @@ async function importSelectedIssues() {
   }
 }
 
+// ========== 폴더 탐색기 ==========
+
+let currentBrowsePath = '';
+
+async function openFolderBrowser() {
+  const panel = document.getElementById('folderBrowserPanel');
+  panel.classList.add('active');
+
+  // 입력된 경로가 있으면 거기서 시작
+  const inputPath = document.getElementById('newProjectPath').value.trim();
+  await browseTo(inputPath || '');
+}
+
+function closeFolderBrowser() {
+  document.getElementById('folderBrowserPanel').classList.remove('active');
+}
+
+async function browseTo(targetPath) {
+  const list = document.getElementById('folderBrowserList');
+  const pathDisplay = document.getElementById('folderBrowserPath');
+
+  list.innerHTML = '<div class="folder-browser-loading">📂 불러오는 중...</div>';
+
+  try {
+    const url = targetPath
+      ? `${API_BASE}/browse?path=${encodeURIComponent(targetPath)}`
+      : `${API_BASE}/browse`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok) {
+      list.innerHTML = `<div class="folder-browser-empty">❌ ${data.error}</div>`;
+      return;
+    }
+
+    currentBrowsePath = data.current;
+    pathDisplay.textContent = data.current;
+
+    if (data.folders.length === 0) {
+      list.innerHTML = '<div class="folder-browser-empty">📭 하위 폴더가 없습니다.</div>';
+      return;
+    }
+
+    list.innerHTML = data.folders.map(folder => `
+      <div class="folder-browser-item" onclick="browseTo('${(data.current + '/' + folder).replace(/'/g, "\\'")}')">
+        <span class="folder-icon">📁</span>
+        <span class="folder-name">${folder}</span>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    console.error('폴더 탐색 실패:', error);
+    list.innerHTML = '<div class="folder-browser-empty">❌ 서버 연결 실패</div>';
+  }
+}
+
+function browseParent() {
+  if (!currentBrowsePath || currentBrowsePath === '/') return;
+  const parent = currentBrowsePath.split('/').slice(0, -1).join('/') || '/';
+  browseTo(parent);
+}
+
+function selectFolder() {
+  if (currentBrowsePath) {
+    document.getElementById('newProjectPath').value = currentBrowsePath;
+    closeFolderBrowser();
+  }
+}
+
 // 프로젝트 목록을 셀렉트박스에 로드
 async function loadProjectsToSelects() {
   try {

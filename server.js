@@ -198,6 +198,55 @@ function detectClaudeCli() {
   return candidates;
 }
 
+// ========== 폴더 탐색 API ==========
+const os = require('os');
+
+const BROWSE_EXCLUDE = new Set([
+  'node_modules', 'dist', '.git', '.svn', '.hg',
+  '__pycache__', '.cache', '.next', '.nuxt', 'build',
+  'coverage', '.DS_Store', 'vendor', 'bower_components'
+]);
+
+app.get('/api/browse', (req, res) => {
+  let targetPath = req.query.path || os.homedir();
+
+  // ~ 확장
+  if (targetPath.startsWith('~')) {
+    targetPath = path.join(os.homedir(), targetPath.slice(1));
+  }
+
+  // 절대 경로로 변환
+  targetPath = path.resolve(targetPath);
+
+  try {
+    const stat = fs.statSync(targetPath);
+    if (!stat.isDirectory()) {
+      return res.status(400).json({ error: '디렉터리가 아닙니다.' });
+    }
+
+    const entries = fs.readdirSync(targetPath, { withFileTypes: true });
+    const folders = entries
+      .filter(e => {
+        if (!e.isDirectory()) return false;
+        if (e.name.startsWith('.')) return false;   // 숨김 폴더 제외
+        if (BROWSE_EXCLUDE.has(e.name)) return false;
+        return true;
+      })
+      .map(e => e.name)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+    res.json({ current: targetPath, folders });
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.status(404).json({ error: '경로를 찾을 수 없습니다.' });
+    }
+    if (err.code === 'EACCES') {
+      return res.status(403).json({ error: '접근 권한이 없습니다.' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = getConfig().port;
 
 app.use(cors());
