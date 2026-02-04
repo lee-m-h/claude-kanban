@@ -1613,8 +1613,7 @@ async function openSessionPicker() {
         const shortId = s.sessionId.slice(0, 8);
         return `
           <div class="session-picker-item" onclick="selectSession('${s.sessionId}')">
-            <div class="session-picker-title">${s.firstMessage || '(내용 없음)'}</div>
-            ${s.summary ? `<div class="session-picker-summary">${s.summary}</div>` : ''}
+            <div class="session-picker-summary">${s.summary}</div>
             <div class="session-picker-meta">
               <span class="session-picker-id">${shortId}...</span>
               <span class="session-picker-date">${date}</span>
