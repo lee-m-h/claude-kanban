@@ -83,13 +83,67 @@ function getConfig() {
   const nodePath = process.execPath;
   // Claude CLI: 설정된 nvmBin 기반 또는 자동 감지
   let claudeCli = '';
+
+  // 1) 설정된 nvmBin 기반
   if (nvmBin) {
-    claudeCli = `${nvmBin}/../lib/node_modules/@anthropic-ai/claude-code/cli.js`;
-  } else {
-    // process.execPath 기반으로 찾기
+    const fromNvm = path.resolve(nvmBin, '..', 'lib', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+    if (fs.existsSync(fromNvm)) claudeCli = fromNvm;
+  }
+
+  // 2) process.execPath 기반
+  if (!claudeCli) {
     const nodeDir = path.dirname(process.execPath);
     const guess = path.join(nodeDir, '..', 'lib', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
-    claudeCli = fs.existsSync(guess) ? guess : '';
+    if (fs.existsSync(guess)) claudeCli = guess;
+  }
+
+  // 3) which claude 로 자동 감지
+  if (!claudeCli) {
+    try {
+      const whichResult = execSync('which claude 2>/dev/null', { encoding: 'utf8' }).trim();
+      if (whichResult && fs.existsSync(whichResult)) {
+        // claude 바이너리가 심볼릭 링크인 경우 실제 cli.js 경로 추적
+        const realPath = fs.realpathSync(whichResult);
+        if (realPath.endsWith('.js')) {
+          claudeCli = realPath;
+        } else {
+          // 바이너리 옆의 cli.js 탐색
+          const binDir = path.dirname(realPath);
+          const cliFromBin = path.join(binDir, '..', 'lib', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+          if (fs.existsSync(cliFromBin)) claudeCli = cliFromBin;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 4) 일반적인 경로 후보들
+  if (!claudeCli) {
+    const homeDir = process.env.HOME || require('os').homedir();
+    const commonPaths = [
+      path.join(homeDir, '.local', 'lib', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js'),
+      path.join(homeDir, '.nvm', 'versions', 'node'),  // nvm 디렉터리 탐색용
+      '/usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js',
+      '/opt/homebrew/lib/node_modules/@anthropic-ai/claude-code/cli.js',
+    ];
+    for (const p of commonPaths) {
+      if (p.includes('.nvm/versions/node') && fs.existsSync(p)) {
+        // nvm: 최신 버전부터 탐색
+        try {
+          const versions = fs.readdirSync(p).sort().reverse();
+          for (const ver of versions) {
+            const cliPath = path.join(p, ver, 'lib', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+            if (fs.existsSync(cliPath)) { claudeCli = cliPath; break; }
+          }
+        } catch (e) {}
+      } else if (fs.existsSync(p)) {
+        claudeCli = p;
+      }
+      if (claudeCli) break;
+    }
+  }
+
+  if (!claudeCli) {
+    console.warn('⚠️ Claude CLI를 찾을 수 없습니다. 설정에서 경로를 지정하거나 npm i -g @anthropic-ai/claude-code 로 설치해주세요.');
   }
   const claudeFlags = settings.claudeCli.flags || DEFAULT_SETTINGS.claudeCli.flags;
 
