@@ -1,6 +1,7 @@
 const { app, Tray, Menu, nativeImage, shell } = require('electron');
-const { spawn, exec } = require('child_process');
+const { spawn, exec, execSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 let tray = null;
 let serverProcess = null;
@@ -8,18 +9,55 @@ let isServerRunning = false;
 
 const SERVER_PORT = 4001;
 
-// 서버 경로 - 고정 경로 사용 (개발/프로덕션 모두)
-const KANBAN_ROOT = '/Users/myoungha/clawd/kanban-prototype';
+// 서버 경로 - menubar-app의 상위 디렉터리 기준 (이식성)
+const KANBAN_ROOT = path.resolve(__dirname, '..');
 const SERVER_PATH = path.join(KANBAN_ROOT, 'server.js');
 const SERVER_CWD = KANBAN_ROOT;
+
+// node 실행 경로 탐색
+function findNode() {
+  // 1) 환경변수 NVM_BIN
+  if (process.env.NVM_BIN) {
+    const p = path.join(process.env.NVM_BIN, 'node');
+    if (fs.existsSync(p)) return p;
+  }
+  // 2) which node (로그인 쉘 통해)
+  try {
+    const shell = process.env.SHELL || '/bin/zsh';
+    const result = execSync(`${shell} -ilc "which node" 2>/dev/null`, { encoding: 'utf8' }).trim();
+    if (result && fs.existsSync(result)) return result;
+  } catch (e) {}
+  // 3) 일반적인 경로들
+  const candidates = [
+    '/usr/local/bin/node',
+    '/opt/homebrew/bin/node',
+    path.join(process.env.HOME || '', '.nvm/versions/node'),
+  ];
+  for (const c of candidates) {
+    if (c.includes('.nvm/versions/node') && fs.existsSync(c)) {
+      try {
+        const vers = fs.readdirSync(c).sort().reverse();
+        for (const v of vers) {
+          const np = path.join(c, v, 'bin', 'node');
+          if (fs.existsSync(np)) return np;
+        }
+      } catch (e) {}
+    } else if (fs.existsSync(c)) return c;
+  }
+  // 최후의 수단
+  return 'node';
+}
 
 // 서버 시작
 function startServer() {
   if (isServerRunning) return;
+
+  const nodePath = findNode();
+  console.log(`Using node: ${nodePath}`);
   
-  serverProcess = spawn('node', [SERVER_PATH], {
+  serverProcess = spawn(nodePath, [SERVER_PATH], {
     cwd: SERVER_CWD,
-    env: { ...process.env },
+    env: { ...process.env, PATH: `${path.dirname(nodePath)}:${process.env.PATH || ''}` },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   
