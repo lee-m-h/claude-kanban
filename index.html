@@ -154,7 +154,7 @@
           <label>새 프로젝트 추가</label>
           <div class="add-project-form">
             <input type="text" id="newProjectId" placeholder="프로젝트 ID (예: my-app)">
-            <input type="text" id="newProjectPath" placeholder="경로 (예: /Users/myoungha/projects/my-app)">
+            <input type="text" id="newProjectPath" placeholder="경로 (예: /home/user/projects/my-app)">
             <button class="btn btn-primary" onclick="addProject()">+ 추가</button>
           </div>
         </div>
@@ -166,7 +166,7 @@
           <div class="form-group">
             <label for="settingsNvmBin">NVM bin 경로</label>
             <div class="input-with-btn">
-              <input type="text" id="settingsNvmBin" placeholder="/Users/myoungha/.nvm/versions/node/v22.15.0/bin">
+              <input type="text" id="settingsNvmBin" placeholder="비워두면 자동 감지 (예: ~/.nvm/versions/node/v22.x.x/bin)">
               <button class="btn btn-secondary" onclick="detectClaudeCliPath()" title="자동 감지">🔍 감지</button>
             </div>
             <div id="detectResult" class="detect-result"></div>
